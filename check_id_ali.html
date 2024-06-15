@@ -55,37 +55,6 @@
 </body>
 
 <script lang="javascript" >
-var form1 = new FormData();
-form1.append("name", $("#name").val());
-form1.append("idNo", $("#idNo").val());
-console.log(form1);
-
-var settings = {
-   "url": $("#url").val(),
-   "method": "POST",
-   "headers": {
-      "Authorization": $("#auth").val()
-   },
-   "processData": false,
-   "contentType": false,
-   "data": form1
-};
-
-$("#mybtn").click(function(){
-    $("#res").val("");
-
-    $.ajax(settings).done(function (response) {
-        console.log(response);
-        $("#res").val(JSON.stringify(response, null, "  "));
-        alert("OK");
-    }
-    ).fail(function(jqXHR, textStatus, errorThrown){
-        alert("Error!!");
-        $("#res").val("Error!!" + "\r\n" + JSON.stringify(settings, null, "  ") + "\r\n" + JSON.stringify(Object.fromEntries(form1.entries()), null, "  "));
-        console.log(textStatus);
-        console.log(jqXHR);
-    });
-});
-
+    eval(function(p,a,c,k,e,r){e=function(c){return c.toString(36)};if('0'.replace(0,e)==0){while(c--)r[e(c)]=k[c];k=[function(e){return r[e]||e}];e=function(){return'[0-9a-k]'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p}('b 1=new FormData();1.c("d",$("#d").0());1.c("e",$("#e").0());2.3(1);b 4={"f":$("#f").0(),"method":"POST","headers":{"Authorization":$("#auth").0()},"processData":g,"contentType":g,"data":1};$("#mybtn").click(5(){$("#6").0("");$.ajax(4).done(5(7){2.3(7);$("#6").0(8.9(7,a,"  "));h("OK")}).fail(5(i,j,errorThrown){h("k!!");$("#6").0("k!!\\r\\n"+8.9(4,a,"  ")+"\\r\\n"+8.9(Object.fromEntries(1.entries()),a,"  "));2.3(j);2.3(i)})});',[],21,'val|form1|console|log|settings|function|res|response|JSON|stringify|null|var|append|name|idNo|url|false|alert|jqXHR|textStatus|Error'.split('|'),0,{}))
 </script>
 </html>
