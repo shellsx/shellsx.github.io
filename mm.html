@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加密工具</title>
+    <title>PP工具</title>
     <script src="crypto-js.min.js"></script>
     <script src="jquery.min.js"></script>
     <style>
@@ -15,7 +15,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1140px;
             margin: 20px auto;
             padding: 15px;
             background-color: #fff;
@@ -114,7 +114,7 @@
 
         input[type="text"],
         input[type="password"] {
-            width: calc(100% - 20px);
+            width: calc(100% - 160px);
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -170,6 +170,16 @@
             margin-left: 10px;
         }
         
+        #aes-tool textarea {
+            font-family: monospace;
+            height: 150px;
+        }
+
+        #binary-tool textarea {
+            font-family: monospace;
+            height: 150px;
+        }
+
         #hash-tool textarea {
             font-family: monospace;
             height: 200px;
@@ -190,12 +200,12 @@
 
     <!-- 工具主页面 -->
     <div class="container">
-        <h1 id="page-title">加密工具</h1>
+        <h1 id="page-title">PP工具</h1>
         <div class="tabs">
-            <button class="active" data-tab="aes-tool">PP 加密工具</button>
-            <button data-tab="hash-tool">HASH 加密工具</button>
-            <button data-tab="replace-tool">符号替换工具</button>
-            <button data-tab="binary-tool">二进制转换工具</button>
+            <button class="active" data-tab="aes-tool">PP 加密</button>
+            <button data-tab="hash-tool">Hash计算</button>
+            <button data-tab="replace-tool">字符串替换</button>
+            <button data-tab="binary-tool">二进制转换</button>
         </div>
 
         <!-- AES加密工具 -->
@@ -238,9 +248,9 @@
             </div>
             <p id="hash-length">HASH长度: 0</p>
             <div class="controls">
-                <button id="md5">MD5 加密</button>
-                <button id="sha256">SHA-256 加密</button>
-                <button id="sha512">SHA-512 加密</button>
+                <button id="md5">MD5</button>
+                <button id="sha256">SHA-256</button>
+                <button id="sha512">SHA-512</button>
             </div>
         </div>
 
@@ -292,6 +302,9 @@
 
     <script>
         $(document).ready(function () {
+            // 默认将焦点设置到密码输入框
+            $('#login-password').focus();
+
             // 静态密码校验
             const correctHash = 'ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413'; //
             $('#login-btn').click(function () {
@@ -302,6 +315,13 @@
                     $('.container').show();
                 } else {
                     $('#login-error').show();
+                }
+            });
+
+            // 监听密码框中的 "回车" 键，按下回车时自动触发登录
+            $('#login-password').keypress(function (e) {
+                if (e.which === 13) {  // 键码13是"Enter"键
+                    $('#login-btn').click();  // 触发登录按钮的点击事件
                 }
             });
 
