@@ -143,6 +143,7 @@
         <div class="section">
             <label for="plain-text">明文:</label>
             <button id="copy-plain" class="btn">复制</button>
+            <button id="copy-word" class="btn">逐个单词复制</button>
             <button id="toggle-plain" class="btn show-hide-btn">隐藏</button>
         </div>
 
@@ -206,6 +207,41 @@
                 }
             });
 
+            var words = [];
+            var currentWordIndex = 0;
+
+            function updateWords() {
+                var text = $('#plain-text').val();
+                words = text.trim().split(/\s+/);
+                currentWordIndex = 0; // Reset index whenever text changes
+            }
+
+            function copyToClipboard(text) {
+                var tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = text;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+            }
+
+            $('#copy-word').click(function() {
+                if (words.length > 0) {
+                    if (currentWordIndex < words.length) {
+                        copyToClipboard(words[currentWordIndex]);
+                        currentWordIndex++;
+                        if (currentWordIndex >= words.length) {
+                            alert('已是最后一个单词');
+                            currentWordIndex = 0; // Optionally reset to allow repeated copying
+                        }
+                    }
+                } else {
+                    alert('文本为空或没有单词');
+                }
+            });
+
+            $('#plain-text').on('input', updateWords);
+            
             var $plainText = $('#plain-text');
             var $cipherText = $('#cipher-text');
             var $password = $('#password');
@@ -257,6 +293,7 @@
                 } else {
                     alert('请填写密文和密码');
                 }
+                updateWords();
             });
 
             $('#clear').click(function() {
