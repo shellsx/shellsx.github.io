@@ -228,7 +228,7 @@
             $('#copy-word').click(function() {
                 if (words.length > 0) {
                     if (currentWordIndex < words.length) {
-                        copyToClipboard(words[currentWordIndex]);
+                        copyToClipboard(words[currentWordIndex].trim());
                         currentWordIndex++;
                         if (currentWordIndex >= words.length) {
                             alert('已是最后一个单词');
