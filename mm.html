@@ -3,442 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PP工具</title>
-    <script src="crypto-js.min.js"></script>
-    <script src="jquery.min.js"></script>
+    <title>PP加密</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
             margin: 0;
             padding: 0;
+            background-color: #f7f7f7;
         }
-
-        .container {
-            max-width: 1140px;
-            margin: 20px auto;
-            padding: 15px;
-            background-color: #fff;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            display: none; /* 初始隐藏，密码正确后显示 */
-        }
-
         .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background: #ffffff;
         }
-
         .login-box {
-            background-color: #fff;
+            width: 400px;
             padding: 20px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            background-color: #ffffff;
         }
-
-        .login-box h2 {
+        .login-box h1 {
+            text-align: center;
             margin-bottom: 20px;
         }
-
+        .login-box label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
         .login-box input {
-            width: 100%;
+            width: calc(100% - 20px);
             padding: 10px;
-            margin-bottom: 20px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 16px;
         }
-
         .login-box button {
-            padding: 10px 20px;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-        }
-
-        .login-box button:hover {
-            background-color: #0056b3;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #ccc;
-            margin-bottom: 20px;
-        }
-
-        .tabs button {
-            flex: 1;
-            padding: 10px;
-            cursor: pointer;
-            background-color: white;
-            border: none;
-            border-bottom: 2px solid transparent;
-            transition: background-color 0.3s, border-bottom 0.3s;
-        }
-
-        .tabs button.active {
-            border-bottom: 2px solid #007bff;
-            background-color: #f9f9f9;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active-content {
-            display: block;
-        }
-
-        .textarea-container {
-            margin-bottom: 15px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: calc(100% - 160px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .controls {
             margin-top: 10px;
         }
-
-        .controls button {
-            padding: 10px 20px;
+        .login-box button:focus {
+            outline: none;
+        }
+        .login-box .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 15px;
+        }
+        .section label {
+            display: inline-block;
             margin-right: 10px;
-            cursor: pointer;
+            font-weight: bold;
+        }
+        .section textarea, .section input {
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .section textarea {
+            resize: none;
+        }
+        .btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-left: 10px;
             border: none;
-            border-radius: 4px;
             background-color: #007bff;
             color: white;
-            transition: background-color 0.3s;
-        }
-
-        .controls button:hover {
-            background-color: #0056b3;
-        }
-
-        .clear-btn {
-            background-color: #ccc;
-        }
-
-        .clear-btn:hover {
-            background-color: #999;
-        }
-
-        .copy-btn {
-            padding: 5px 10px;
-            margin-left: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
             cursor: pointer;
         }
-
-        .copy-btn:hover {
-            background-color: #218838;
+        .btn-secondary {
+            background-color: #6c757d;
         }
-
-        .password-container {
-            display: flex;
-            align-items: center;
+        .btn-danger {
+            background-color: #dc3545;
         }
-
-        .password-container button {
-            margin-left: 10px;
+        .btn:disabled {
+            background-color: #d6d6d6;
+            cursor: not-allowed;
         }
-        
-        #aes-tool textarea {
-            font-family: monospace;
-            height: 150px;
+        .hidden-content {
+            filter: blur(0);
+            transition: filter 0.3s ease;
         }
-
-        #binary-tool textarea {
-            font-family: monospace;
-            height: 150px;
+        .hidden-content.hidden {
+            filter: blur(5px);
+            color: transparent;
+            background: transparent;
         }
-
-        #hash-tool textarea {
-            font-family: monospace;
-            height: 200px;
+        .show-hide-btn {
+            font-size: 14px;
         }
-
+        h1 {
+            text-align: center;
+        }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
 </head>
 <body>
-    <!-- 登录页面 -->
-    <div class="login-container">
+    <!-- 登录界面 -->
+    <div class="login-container" id="login-container">
         <div class="login-box">
-            <h2>请输入密码</h2>
-            <input type="password" id="login-password" placeholder="输入密码">
-            <button id="login-btn">登录</button>
-            <p id="login-error" style="color:red; display:none;">密码错误，请重试！</p>
+            <h1>登录</h1>
+            <label for="entry-password">请输入密码:</label>
+            <input type="password" id="entry-password" />
+            <button id="submit-password">确认</button>
+            <div id="password-error" class="error">密码错误，请重试。</div>
         </div>
     </div>
 
-    <!-- 工具主页面 -->
-    <div class="container">
-        <h1 id="page-title">PP工具</h1>
-        <div class="tabs">
-            <button class="active" data-tab="aes-tool">PP 加密</button>
-            <button data-tab="hash-tool">Hash计算</button>
-            <button data-tab="replace-tool">字符串替换</button>
-            <button data-tab="binary-tool">二进制转换</button>
+    <!-- 主内容 -->
+    <div class="container" id="main-content" style="display: none;">
+        <!-- 第一行块 -->
+        <div class="section">
+            <h1>PP加密</h1>
         </div>
 
-        <!-- AES加密工具 -->
-        <div id="aes-tool" class="tab-content active-content">
-            <div class="textarea-container">
-                <label for="plaintext">明文:</label>
-                <button class="copy-btn" onclick="copyText('plaintext')">复制明文</button>
-                <textarea id="plaintext" placeholder="输入明文..."></textarea>
-            </div>
-            <div class="textarea-container">
-                <label for="ciphertext">密文:</label>
-                <button class="copy-btn" onclick="copyText('ciphertext')">复制密文</button>
-                <textarea id="ciphertext" placeholder="密文将在此显示..."></textarea>
-            </div>
-            <div class="password-container">
-                <label for="password">密码:</label>
-                <input type="password" id="password" placeholder="输入密码">
-                <button id="toggle-password">查看密码</button>
-            </div>
-            <div class="controls">
-                <button id="encrypt">加密</button>
-                <button id="decrypt">解密</button>
-                <button class="clear-btn" onclick="clearFields('#plaintext, #ciphertext, #password')">清空</button>
-            </div>
+        <!-- 第二行块 -->
+        <div class="section">
+            <label for="plain-text">明文:</label>
+            <button id="copy-plain" class="btn">复制</button>
+            <button id="toggle-plain" class="btn show-hide-btn">隐藏</button>
         </div>
 
-        <!-- HASH 加密工具 -->
-        <div id="hash-tool" class="tab-content">
-            <div class="textarea-container">
-                <label for="hash-content">内容:</label>
-                <textarea id="hash-content" placeholder="输入内容..."></textarea>
-            </div>
-            <div>
-                <p id="hash-lines">行数: 0</p>
-                <p id="hash-chars">字符数: 0</p>
-            </div>
-            <div class="textarea-container">
-                <label for="hash-result">HASH值:</label>
-                <input type="text" id="hash-result" readonly>
-            </div>
-            <p id="hash-length">HASH长度: 0</p>
-            <div class="controls">
-                <button id="md5">MD5</button>
-                <button id="sha256">SHA-256</button>
-                <button id="sha512">SHA-512</button>
-            </div>
+        <!-- 第三行块 -->
+        <div class="section">
+            <textarea id="plain-text" rows="10" class="hidden-content"></textarea>
         </div>
 
-        <!-- 符号替换工具 -->
-        <div id="replace-tool" class="tab-content">
-            <div class="textarea-container">
-                <label for="replace-original">原文本:</label>
-                <button class="copy-btn" onclick="copyText('replace-original')">复制</button>
-                <textarea id="replace-original" placeholder="输入原文本..."></textarea>
-            </div>
-            <div class="textarea-container">
-                <label for="find-symbol">查找符号:</label>
-                <input type="text" id="find-symbol">
-            </div>
-            <div class="textarea-container">
-                <label for="replace-symbol">替换符号:</label>
-                <input type="text" id="replace-symbol">
-            </div>
-            <div class="textarea-container">
-                <label for="replace-result">目标文本:</label>
-                <button class="copy-btn" onclick="copyText('replace-result')">复制</button>
-                <textarea id="replace-result" placeholder="目标文本将在此显示..."></textarea>
-            </div>
-            <div class="controls">
-                <button id="replace-btn">替换</button>
-                <button class="clear-btn" onclick="clearFields('#replace-original, #replace-result, #find-symbol, #replace-symbol')">清空</button>
-            </div>
+        <!-- 第四行块 -->
+        <div class="section">
+            <label for="cipher-text">密文:</label>
+            <button id="copy-cipher" class="btn">复制</button>
+            <button id="toggle-cipher" class="btn show-hide-btn">隐藏</button>
         </div>
 
-        <!-- 二进制转换工具 -->
-        <div id="binary-tool" class="tab-content">
-            <div class="textarea-container">
-                <label for="binary-original">原文本:</label>
-                <button class="copy-btn" onclick="copyText('binary-original')">复制</button>
-                <textarea id="binary-original" placeholder="输入原文本..."></textarea>
-            </div>
-            <div class="textarea-container">
-                <label for="binary-result">二进制文本:</label>
-                <button class="copy-btn" onclick="copyText('binary-result')">复制</button>
-                <textarea id="binary-result" placeholder="二进制文本将在此显示..."></textarea>
-            </div>
-            <div class="controls">
-                <button id="binary-convert">转换</button>
-                <button id="binary-reverse">逆向转换</button>
-                <button class="clear-btn" onclick="clearFields('#binary-original, #binary-result')">清空</button>
-            </div>
+        <!-- 第五行块 -->
+        <div class="section">
+            <textarea id="cipher-text" rows="10" class="hidden-content"></textarea>
+        </div>
+
+        <!-- 第六行块 -->
+        <div class="section">
+            <label for="password">密码:</label>
+            <input type="password" id="password" />
+            <button id="toggle-password" class="btn show-hide-btn">显示</button>
+        </div>
+
+        <!-- 第七行块 -->
+        <div class="section">
+            <button id="encrypt" class="btn">加密</button>
+            <button id="decrypt" class="btn">解密</button>
+            <button id="clear" class="btn btn-danger">清空</button>
         </div>
     </div>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // 默认将焦点设置到密码输入框
-            $('#login-password').focus();
+            $('#entry-password').focus();
 
-            // 静态密码校验
-            const correctHash = 'ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413'; //
-            $('#login-btn').click(function () {
-                const inputPassword = $('#login-password').val();
-                const inputHash = CryptoJS.SHA512(inputPassword).toString();
-                if (inputHash === correctHash) {
-                    $('.login-container').hide();
-                    $('.container').show();
+            // 密码校验逻辑
+            function checkPassword() {
+                var enteredPassword = $('#entry-password').val();
+                var correctPasswordHash = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
+                var enteredPasswordHash = CryptoJS.SHA256(enteredPassword).toString();
+
+                if (enteredPasswordHash === correctPasswordHash) {
+                    $('#login-container').hide();
+                    $('#main-content').show();
                 } else {
-                    $('#login-error').show();
+                    $('#password-error').show();
+                }
+            }
+
+            $('#submit-password').click(checkPassword);
+
+            $('#entry-password').keypress(function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('#submit-password').click();
                 }
             });
 
-            // 监听密码框中的 "回车" 键，按下回车时自动触发登录
-            $('#login-password').keypress(function (e) {
-                if (e.which === 13) {  // 键码13是"Enter"键
-                    $('#login-btn').click();  // 触发登录按钮的点击事件
-                }
+            var $plainText = $('#plain-text');
+            var $cipherText = $('#cipher-text');
+            var $password = $('#password');
+
+            $('#toggle-plain').click(function() {
+                $plainText.toggleClass('hidden');
+                $(this).text($plainText.hasClass('hidden') ? '显示' : '隐藏');
             });
 
-            // Tab 切换功能
-            $('.tabs button').click(function () {
-                $('.tabs button').removeClass('active');
-                $(this).addClass('active');
-                const tabId = $(this).attr('data-tab');
-                $('.tab-content').removeClass('active-content');
-                $('#' + tabId).addClass('active-content');
+            $('#toggle-cipher').click(function() {
+                $cipherText.toggleClass('hidden');
+                $(this).text($cipherText.hasClass('hidden') ? '显示' : '隐藏');
             });
 
-            // AES 加密/解密
-            $('#encrypt').click(function () {
-                const plaintext = $('#plaintext').val();
-                const password = $('#password').val() + "oo";
-                const ciphertext = CryptoJS.AES.encrypt(plaintext, password).toString();
-                $('#ciphertext').val(ciphertext);
+            $('#toggle-password').click(function() {
+                var type = $password.attr('type') === 'password' ? 'text' : 'password';
+                $password.attr('type', type);
+                $(this).text(type === 'password' ? '显示' : '隐藏');
             });
 
-            $('#decrypt').click(function () {
-                const ciphertext = $('#ciphertext').val();
-                const password = $('#password').val() + "oo";
-                const bytes = CryptoJS.AES.decrypt(ciphertext, password);
-                try {
-                    const plaintext = bytes.toString(CryptoJS.enc.Utf8);
-                    $('#plaintext').val(plaintext);
-                } catch (e) {
-                    alert('解密失败，检查密文和密码！');
-                }
+            $('#copy-plain').click(function() {
+                $plainText.select();
+                document.execCommand('copy');
             });
 
-            // 密码查看/隐藏切换
-            $('#toggle-password').click(function () {
-                const passwordField = $('#password');
-                if (passwordField.attr('type') === 'password') {
-                    passwordField.attr('type', 'text');
-                    $(this).text('隐藏密码');
+            $('#copy-cipher').click(function() {
+                $cipherText.select();
+                document.execCommand('copy');
+            });
+
+            $('#encrypt').click(function() {
+                var plaintext = $plainText.val();
+                var password = $password.val() + "oo";
+                if (plaintext && password) {
+                    var ciphertext = CryptoJS.AES.encrypt(plaintext, password).toString();
+                    $cipherText.val(ciphertext);
                 } else {
-                    passwordField.attr('type', 'password');
-                    $(this).text('查看密码');
+                    alert('请填写明文和密码');
                 }
             });
 
-            // HASH 加密工具
-            $('#md5').click(function () {
-                const content = $('#hash-content').val();
-                const hash = CryptoJS.MD5(content).toString();
-                $('#hash-result').val(hash);
-                $('#hash-length').text('HASH长度: ' + hash.length);
-            });
-
-            $('#sha256').click(function () {
-                const content = $('#hash-content').val();
-                const hash = CryptoJS.SHA256(content).toString();
-                $('#hash-result').val(hash);
-                $('#hash-length').text('HASH长度: ' + hash.length);
-            });
-
-            $('#sha512').click(function () {
-                const content = $('#hash-content').val();
-                const hash = CryptoJS.SHA512(content).toString();
-                $('#hash-result').val(hash);
-                $('#hash-length').text('HASH长度: ' + hash.length);
-            });
-
-            $('#hash-content').on('input', function () {
-                const lines = $(this).val().split('\n').length;
-                const chars = $(this).val().length;
-                $('#hash-lines').text('行数: ' + lines);
-                $('#hash-chars').text('字符数: ' + chars);
-            });
-
-            // 符号替换工具
-            $('#replace-btn').click(function () {
-                const original = $('#replace-original').val();
-                const findSymbol = $('#find-symbol').val();
-                const replaceSymbol = $('#replace-symbol').val();
-                const result = original.split(findSymbol).join(replaceSymbol);
-                $('#replace-result').val(result);
-            });
-
-            // 二进制转换工具
-            $('#binary-convert').click(function () {
-                const originalText = $('#binary-original').val();
-                let binaryResult = '';
-                for (let i = 0; i < originalText.length; i++) {
-                    const binaryChar = originalText.charCodeAt(i).toString(2).padStart(8, '0');
-                    binaryResult += binaryChar + ' ';
+            $('#decrypt').click(function() {
+                var ciphertext = $cipherText.val();
+                var password = $password.val() + "oo";
+                if (ciphertext && password) {
+                    var bytes = CryptoJS.AES.decrypt(ciphertext, password);
+                    var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+                    $plainText.val(plaintext);
+                } else {
+                    alert('请填写密文和密码');
                 }
-                $('#binary-result').val(binaryResult.trim());
             });
 
-            $('#binary-reverse').click(function () {
-                const binaryText = $('#binary-result').val().split(' ');
-                let originalResult = '';
-                for (let i = 0; i < binaryText.length; i++) {
-                    const charCode = parseInt(binaryText[i], 2);
-                    originalResult += String.fromCharCode(charCode);
-                }
-                $('#binary-original').val(originalResult);
+            $('#clear').click(function() {
+                $plainText.val('');
+                $cipherText.val('');
+                $password.val('');
             });
-
-            // 复制文本
-            window.copyText = function (elementId) {
-                const text = $('#' + elementId).val();
-                navigator.clipboard.writeText(text).then(function () {
-                    alert('已复制到剪贴板');
-                }, function (err) {
-                    alert('复制失败');
-                });
-            };
-
-            // 清空输入
-            window.clearFields = function (selectors) {
-                $(selectors).val('');
-            };
         });
     </script>
 </body>
