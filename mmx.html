@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP加密</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #ffffff;
+        }
+        .login-box {
+            width: 400px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-box label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .login-box input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .login-box button:focus {
+            outline: none;
+        }
+        .login-box .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 15px;
+        }
+        .section label {
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .section textarea, .section input {
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .section textarea {
+            resize: none;
+        }
+        .btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-left: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn:disabled {
+            background-color: #d6d6d6;
+            cursor: not-allowed;
+        }
+        .hidden-content {
+            filter: blur(0);
+            transition: filter 0.3s ease;
+        }
+        .hidden-content.hidden {
+            filter: blur(5px);
+            color: transparent;
+            background: transparent;
+        }
+        .show-hide-btn {
+            font-size: 14px;
+        }
+        h1 {
+            text-align: center;
+        }
+    </style>
+    <script src="jquery.min.js"></script>
+    <script src="crypto-js.min.js"></script>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div class="login-container" id="login-container">
+        <div class="login-box">
+            <h1>登录</h1>
+            <label for="entry-password">请输入密码:</label>
+            <input type="password" id="entry-password" />
+            <button id="submit-password">确认</button>
+            <div id="password-error" class="error">密码错误，请重试。</div>
+        </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="container" id="main-content" style="display: none;">
+        <!-- 第一行块 -->
+        <div class="section">
+            <h1>PP加密</h1>
+        </div>
+
+        <!-- 第二行块 -->
+        <div class="section">
+            <label for="plain-text">明文:</label>
+            <button id="copy-plain" class="btn">复制</button>
+            <button id="copy-word" class="btn">逐个单词复制</button>
+            <button id="reverse-letters" class="btn">字母逆向排序</button>
+            <button id="reverse-words" class="btn">单词逆向排序</button>
+            <button id="toggle-plain" class="btn show-hide-btn">隐藏</button>
+        </div>
+
+        <!-- 第三行块 -->
+        <div class="section">
+            <textarea id="plain-text" rows="10" class="hidden-content"></textarea>
+        </div>
+
+        <!-- 第四行块 -->
+        <div class="section">
+            <label for="cipher-text">密文:</label>
+            <button id="copy-cipher" class="btn">复制</button>
+            <button id="toggle-cipher" class="btn show-hide-btn">隐藏</button>
+        </div>
+
+        <!-- 第五行块 -->
+        <div class="section">
+            <textarea id="cipher-text" rows="10" class="hidden-content"></textarea>
+        </div>
+
+        <!-- 第六行块 -->
+        <div class="section">
+            <label for="password">密码:</label>
+            <input type="password" id="password" />
+            <button id="toggle-password" class="btn show-hide-btn">显示</button>
+        </div>
+
+        <!-- 第七行块 -->
+        <div class="section">
+            <button id="encrypt" class="btn">加密</button>
+            <button id="decrypt" class="btn">解密</button>
+            <button id="clear" class="btn btn-danger">清空</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 默认将焦点设置到密码输入框
+            $('#entry-password').focus();
+
+            // 密码校验逻辑
+            function checkPassword() {
+                var enteredPassword = $('#entry-password').val();
+                var correctPasswordHash = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
+                var enteredPasswordHash = CryptoJS.SHA256(enteredPassword).toString();
+
+                if (enteredPasswordHash === correctPasswordHash) {
+                    $('#login-container').hide();
+                    $('#main-content').show();
+                } else {
+                    $('#password-error').show();
+                }
+            }
+
+            $('#submit-password').click(checkPassword);
+
+            $('#entry-password').keypress(function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('#submit-password').click();
+                }
+            });
+
+            var words = [];
+            var currentWordIndex = 0;
+
+            function updateWords() {
+                var text = $('#plain-text').val();
+                words = text.trim().split(/\s+/);
+                currentWordIndex = 0; // Reset index whenever text changes
+            }
+
+            function copyToClipboard(text) {
+                var tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = text;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+            }
+
+            $('#copy-word').click(function() {
+                if (words.length > 0) {
+                    if (currentWordIndex < words.length) {
+                        copyToClipboard(words[currentWordIndex].trim());
+                        currentWordIndex++;
+                        if (currentWordIndex >= words.length) {
+                            alert('已是最后一个单词');
+                            currentWordIndex = 0; // Optionally reset to allow repeated copying
+                        }
+                    }
+                } else {
+                    alert('文本为空或没有单词');
+                }
+            });
+
+            // 字母逆向排序
+            $('#reverse-letters').click(function() {
+                let text = $('#plain-text').val(); // 获取文本框中的内容
+                let reversedText = text.split('').reverse().join(''); // 字符逆序
+                $('#plain-text').val(reversedText); // 将逆序后的内容放回文本框中
+            });
+
+            // 单词逆向排序，保留换行符
+            $('#reverse-words').click(function() {
+                let text = $('#plain-text').val(); // 获取文本框中的内容
+                // 保留换行符，并按照空白字符（包括空格和换行符）分割
+                let reversedWords = text.split(/(\s+)/).reverse().join(''); 
+                $('#plain-text').val(reversedWords); // 将逆序后的内容放回文本框中
+            });
+
+            $('#plain-text').on('input', updateWords);
+            
+            var $plainText = $('#plain-text');
+            var $cipherText = $('#cipher-text');
+            var $password = $('#password');
+
+            $('#toggle-plain').click(function() {
+                $plainText.toggleClass('hidden');
+                $(this).text($plainText.hasClass('hidden') ? '显示' : '隐藏');
+            });
+
+            $('#toggle-cipher').click(function() {
+                $cipherText.toggleClass('hidden');
+                $(this).text($cipherText.hasClass('hidden') ? '显示' : '隐藏');
+            });
+
+            $('#toggle-password').click(function() {
+                var type = $password.attr('type') === 'password' ? 'text' : 'password';
+                $password.attr('type', type);
+                $(this).text(type === 'password' ? '显示' : '隐藏');
+            });
+
+            $('#copy-plain').click(function() {
+                $plainText.select();
+                document.execCommand('copy');
+            });
+
+            $('#copy-cipher').click(function() {
+                $cipherText.select();
+                document.execCommand('copy');
+            });
+
+            $('#encrypt').click(function() {
+                var plaintext = $plainText.val();
+                var password = $password.val() + "oo";
+                if (plaintext && password) {
+                    var ciphertext = CryptoJS.AES.encrypt(plaintext, password).toString();
+                    $cipherText.val(ciphertext);
+                } else {
+                    alert('请填写明文和密码');
+                }
+            });
+
+            $('#decrypt').click(function() {
+                var ciphertext = $cipherText.val();
+                var password = $password.val() + "oo";
+                if (ciphertext && password) {
+                    var bytes = CryptoJS.AES.decrypt(ciphertext, password);
+                    var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+                    $plainText.val(plaintext);
+                } else {
+                    alert('请填写密文和密码');
+                }
+                updateWords();
+            });
+
+            $('#clear').click(function() {
+                $plainText.val('');
+                $cipherText.val('');
+                $password.val('');
+            });
+        });
+    </script>
+</body>
+</html>

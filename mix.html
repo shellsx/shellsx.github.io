@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML工具</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        #tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 5px 5px 0 0;
+            transition: background-color 0.3s;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+            border-bottom: none;
+        }
+        .tab:hover {
+            background-color: #e1e1e1;
+        }
+        .tab-content {
+            display: none;
+            border: 1px solid #ccc;
+            border-radius: 0 5px 5px 5px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>HTML工具</h1>
+
+    <div id="tabs">
+        <div class="tab active" data-tab="html-compress">HTML压缩</div>
+        <div class="tab" data-tab="js-encrypt-obfuscate">JS加密混淆</div>
+    </div>
+
+    <!-- HTML压缩 Tab -->
+    <div id="html-compress" class="tab-content active">
+        <h2>HTML压缩</h2>
+        <textarea id="html-input" placeholder="输入HTML代码"></textarea>
+        <button id="compress-html">压缩HTML</button>
+        <h3>压缩后的HTML：</h3>
+        <textarea id="html-output" readonly></textarea>
+    </div>
+
+    <!-- JS加密混淆 Tab -->
+    <div id="js-encrypt-obfuscate" class="tab-content">
+        <h2>JS加密混淆</h2>
+        <textarea id="js-input" placeholder="输入JavaScript代码"></textarea>
+        <button id="encrypt-js">加密混淆JS</button>
+        <h3>加密混淆后的JS：</h3>
+        <textarea id="js-output" readonly></textarea>
+    </div>
+
+    <script>
+        // Tab切换逻辑
+        $('.tab').click(function() {
+            $('.tab').removeClass('active');
+            $('.tab-content').removeClass('active');
+            $(this).addClass('active');
+            $('#' + $(this).data('tab')).addClass('active');
+        });
+
+        // HTML压缩逻辑
+        $('#compress-html').click(function() {
+            let html = $('#html-input').val();
+            let compressedHtml = html.replace(/\n+/g, '').replace(/\s{2,}/g, ' ').trim(); // 简单压缩
+            $('#html-output').val(compressedHtml);
+        });
+
+        // 去除JS注释
+        function removeComments(jsCode) {
+            return jsCode.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ''); // 去除多行和单行注释
+        }
+
+        // Base64编码函数
+        function base64Encode(input) {
+            return btoa(unescape(encodeURIComponent(input)));
+        }
+
+        // 深度混淆：加密为eval(function(){})格式
+        function encryptAndObfuscateJs(jsCode) {
+            // 去除注释
+            let codeWithoutComments = removeComments(jsCode);
+
+            // Base64 编码
+            let base64Encoded = base64Encode(codeWithoutComments);
+
+            // 构造 eval(function(){}()) 形式的混淆代码
+            let obfuscatedJs = `
+                (function() {
+                    eval(decodeURIComponent(escape(window.atob('${base64Encoded}'))));
+                })();
+            `;
+
+            return obfuscatedJs;
+        }
+
+        // JS加密混淆逻辑
+        $('#encrypt-js').click(function() {
+            let js = $('#js-input').val();
+            let encryptedJs = encryptAndObfuscateJs(js); // 加密混淆
+            $('#js-output').val(encryptedJs);
+        });
+    </script>
+
+</body>
+</html>
