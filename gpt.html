@@ -3,142 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT 聊天工具</title>
+    <title>聊天工具</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #e6f2ff;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
+        .chat-container {
+            flex: 1;
+            max-width: 100%;
+            margin: 0;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 20px);
+            padding: 22px; /* 上下左右留白22px */
+            box-sizing: border-box; /* 确保padding不影响整体宽度 */
         }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
+        .chat-window {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            padding: 10px; /* 内部聊天窗口的留白 */
+            box-sizing: border-box;
+        }
+        .message {
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        pre {
-            background-color: #f4f4f4;
             padding: 10px;
             border-radius: 5px;
-            overflow: auto;
+            max-width: calc(100% - 104px); /* 52px left + 52px right */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
             white-space: pre-wrap;
         }
-        .button-container {
-            display: flex;
-            justify-content: space-between;
+        .message.user {
+            background: #cce5ff;
+            margin-left: 52px; /* 左边留白52px */
+            margin-right: auto;
+            text-align: right;
         }
-        .mode-container {
+        .message.bot {
+            background: #f0f0f0;
+            margin-right: 52px; /* 右边留白52px */
+            margin-left: auto;
+            text-align: left;
+        }
+        .input-area {
             display: flex;
-            justify-content: space-between;
+            padding: 10px;
+            align-items: flex-start;
+        }
+        .input-area select, 
+        .input-area input[type="password"] {
+            margin-right: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .input-area button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-left: 5px;
+            width: 80px; /* 固定按钮宽度，防止换行 */
+        }
+        .input-area button:hover {
+            background: #0056b3;
+        }
+        textarea {
+            width: 100%;
+            max-height: 200px; /* 限制最大高度，约等于10行 */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none; /* 禁止手动调整大小 */
+            overflow: hidden; /* 隐藏滚动条 */
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 5px;
+            overflow-x: auto;
         }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>GPT 聊天工具</h1>
-        <label for="apikey">输入 API Key:</label>
-        <input type="text" id="apikey" placeholder="输入你的API密钥">
-
-        <div class="mode-container">
-            <div style="flex: 1; margin-right: 10px;">
-                <label for="gptVersion">选择 GPT 版本:</label>
-                <select id="gptVersion">
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                </select>
-            </div>
-            <div style="flex: 1;">
-                <label for="tempChat">聊天模式:</label>
-                <select id="tempChat">
-                    <option value="true">临时聊天模式</option>
-                    <option value="false">常规聊天模式</option>
-                </select>
-            </div>
+    <div class="chat-container">
+        <div class="chat-window" id="chat-window"></div>
+        <div class="input-area">
+            <select id="gpt-version">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-0613">GPT-4 (0613版本)</option>
+                <option value="gpt-4-32k">GPT-4 (32k版本)</option>
+                <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo (16k版本)</option>
+            </select>
+            <input type="password" id="api-key" placeholder="输入你的 API 密码" style="flex: 1;">
         </div>
-
-        <label for="userInput">输入问题:</label>
-        <textarea id="userInput" rows="4" placeholder="在这里输入你的问题"></textarea>
-
-        <div class="button-container">
-            <button id="submit">提交</button>
-            <button id="clear">清空聊天</button>
+        <div class="input-area">
+            <textarea id="user-input" placeholder="输入消息..." rows="1"></textarea>
+            <button id="send-button">发送</button>
+            <button id="clear-button">清空</button>
         </div>
-
-        <h2>响应:</h2>
-        <pre id="response"></pre>
     </div>
 
     <script>
+        let conversationHistory = []; // 用于存储对话历史
+
         $(document).ready(function() {
-            $('#submit').click(function() {
-                const apikey = $('#apikey').val();
-                const gptVersion = $('#gptVersion').val();
-                const tempChat = $('#tempChat').val() === "true";
-                const userInput = $('#userInput').val();
-                
-                if (!apikey || !userInput) {
-                    alert("请填写API Key和问题。");
+            $('#send-button').click(function() {
+                sendMessage();
+            });
+
+            $('#user-input').keypress(function(event) {
+                if (event.which === 13 && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            $('#clear-button').click(function() {
+                $('#chat-window').empty();
+                conversationHistory = []; // 清空对话历史
+            });
+
+            $('#user-input').on('input', function() {
+                this.style.height = 'auto'; // 重置高度
+                this.style.height = Math.min(this.scrollHeight, 200) + 'px'; // 设置高度，最大200px
+            });
+
+            async function sendMessage() {
+                const message = $('#user-input').val();
+                const apiKey = $('#api-key').val();
+                const gptVersion = $('#gpt-version').val();
+
+                if (!apiKey) {
+                    $('#chat-window').append('<div class="message bot">错误：API 密码不能为空。</div>');
+                    scrollToBottom();
                     return;
                 }
 
-                let messages = [];
-                if (!tempChat) {
-                    // 在常规聊天模式下可以添加上下文
-                    // 这里可以加入之前的消息，您可以选择实现
-                }
+                if (message) {
+                    $('#chat-window').append(`<div class="message user">${escapeHtml(message)}</div>`);
+                    $('#user-input').val(''); // 清空输入框
+                    $('#user-input').css('height', '40px'); // 重置高度
+                    scrollToBottom();
 
-                messages.push({ role: "user", content: userInput });
+                    // 存储用户消息到历史记录
+                    conversationHistory.push({ role: 'user', content: message });
 
-                $.ajax({
-                    url: `https://api.openai.com/v1/chat/completions`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        'Authorization': `Bearer ${apikey}`
-                    },
-                    data: JSON.stringify({
-                        model: gptVersion,
-                        messages: messages
-                    }),
-                    success: function(data) {
-                        const responseContent = data.choices[0].message.content;
-                        const escapedContent = responseContent
-                            .replace(/&/g, '&amp;')
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;')
-                            .replace(/"/g, '&quot;')
-                            .replace(/'/g, '&#39;');
+                    // 接入 ChatGPT API
+                    try {
+                        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: gptVersion,
+                                messages: conversationHistory, // 直接传递历史消息
+                                temperature: 0.7,
+                            })
+                        });
 
-                        $('#response').append(`问题: ${userInput}\n回答:\n${escapedContent}\n\n`);
-                        $('#userInput').val(''); // 清空输入框
-                    },
-                    error: function(err) {
-                        $('#response').append(`错误: ${err.responseText}\n\n`);
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            $('#chat-window').append(`<div class="message bot">错误：${errorData.error.message}</div>`);
+                        } else {
+                            const data = await response.json();
+                            const botMessage = formatResponse(data.choices[0].message.content);
+                            $('#chat-window').append(`<div class="message bot">${botMessage}</div>`);
+                            
+                            // 存储机器人消息到历史记录
+                            conversationHistory.push({ role: 'assistant', content: data.choices[0].message.content });
+                        }
+                        scrollToBottom();
+                    } catch (error) {
+                        $('#chat-window').append(`<div class="message bot">错误：${error.message}</div>`);
+                        scrollToBottom();
                     }
-                });
-            });
+                }
+            }
 
-            $('#clear').click(function() {
-                $('#response').text(''); // 清空聊天记录
-            });
+            function scrollToBottom() {
+                const chatWindow = $('#chat-window');
+                chatWindow.scrollTop(chatWindow[0].scrollHeight);
+            }
+
+            function formatResponse(content) {
+                return escapeHtml(content)
+                    .replace(/```([\s\S]*?)```/g, '<pre>\$1</pre>') 
+                    .replace(/\n/g, '<br>');
+            }
+
+            function escapeHtml(html) {
+                return html.replace(/&/g, "&amp;")
+                           .replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;")
+                           .replace(/"/g, "&quot;")
+                           .replace(/'/g, "&#039;");
+            }
         });
     </script>
 </body>
