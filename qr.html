@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #ffffff;
+        }
+        .login-box {
+            width: 400px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-box label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .login-box input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-box button:focus {
+            outline: none;
+        }
+        .login-box .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .container {
+            width: 400px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        textarea {
+            width: 96%;
+            height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #qrcode {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="crypto-js.min.js"></script>
+</head>
+<body>
+
+<!-- 登录界面 -->
+<div class="login-container" id="login-container">
+    <div class="login-box">
+        <h1>登录</h1>
+        <label for="entry-password">请输入密码:</label>
+        <input type="password" id="entry-password" />
+        <button id="submit-password">确认</button>
+        <div id="password-error" class="error">密码错误，请重试。</div>
+    </div>
+</div>
+
+<div class="container" id="main-content" style="display: none;">
+    <h2>QR</h2>
+    <div>WIFI:S:MyNetwork;P:mypassword;T:WPA2;</div>
+    <div>tel:+1234567890</div>
+    <textarea id="qr-input" placeholder="请输入文本或网址..."></textarea>
+    <button id="generate-btn">生成二维码</button>
+    <div id="qrcode"></div>
+</div>
+
+<!-- 引入 jQuery -->
+<script src="jquery.min.js"></script>
+<!-- 引入 jquery.qrcode 插件 -->
+<script src="jquery.qrcode.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // 默认将焦点设置到密码输入框
+        $('#entry-password').focus();
+
+        // 密码校验逻辑
+        function checkPassword() {
+            var enteredPassword = $('#entry-password').val();
+            var correctPasswordHash = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
+            var enteredPasswordHash = CryptoJS.SHA256(enteredPassword).toString();
+
+            if (enteredPasswordHash === correctPasswordHash) {
+                $('#login-container').hide();
+                $('#main-content').show();
+            } else {
+                $('#password-error').show();
+            }
+        }
+
+        $('#submit-password').click(checkPassword);
+
+        $('#entry-password').keypress(function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('#submit-password').click();
+            }
+        });
+        
+        $('#generate-btn').click(function () {
+            const inputValue = $('#qr-input').val().trim();
+            if (inputValue) {
+                // 清空之前的二维码
+                $('#qrcode').empty();
+
+                // 确保内容为合法格式（自动添加 http:// 前缀）
+                const validInput = formatInput(inputValue);
+
+                // 生成二维码，确保高纠错级别和适当的尺寸
+                $('#qrcode').qrcode({
+                    text: utf8Encode(validInput),
+                    width: 300,  // 设置尺寸为 300x300
+                    height: 300,
+                    correctLevel: 1  // 高纠错级别 (L=0, M=1, Q=2, H=3)
+                });
+            } else {
+                alert('请输入文本或网址！');
+            }
+        });
+
+        // 将字符串转换为 UTF-8 格式
+        function utf8Encode(str) {
+            return unescape(encodeURIComponent(str));
+        }
+
+        // 格式化输入：如果是网址且缺少 http 前缀，则自动添加
+        function formatInput(input) {
+            const urlPattern = /^(http|https):\/\//;
+            if (!urlPattern.test(input) && input.startsWith('www')) {
+                return 'http://' + input;  // 添加 http:// 前缀
+            }
+            return input;
+        }
+    });
+</script>
+
+</body>
+</html>
