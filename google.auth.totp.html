@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Authenticator - 使用 otplib 实现</title>
+    <script src="js/otplib-browser.js"></script>
+    <script src="js/qrcode.min.js"></script>
+</head>
+<body>
+    <h2>Google Authenticator - 纯前端 JavaScript 版</h2>
+    
+    <div>
+        <strong>你的密钥（Base32 编码）可编辑:</strong> 
+        <span id="secret-key" contenteditable="true"></span>
+    </div>
+
+    <h3>扫码添加到 Google Authenticator</h3>
+    <div id="qrcode"></div>
+
+    <h3>当前 OTP（每 30 秒变化一次）</h3>
+    <div id="otp"></div>
+
+    <h3>输入 OTP 进行验证</h3>
+    <input type="text" id="user-otp" placeholder="输入 Google Authenticator 生成的 OTP">
+    <button onclick="verifyOTP()">验证</button>
+    <p id="result"></p>
+
+    <script>
+        // 生成随机 Base32 密钥
+        function generateSecret() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; // Base32 字母
+            let secret = '';
+            for (let i = 0; i < 16; i++) {  // 16 位密钥
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return secret;
+        }
+
+        // 生成密钥
+        const secretKey = generateSecret();
+        document.getElementById('secret-key').innerText = secretKey;
+
+        // 创建 otplib TOTP 对象
+        const totp = otplib.authenticator;
+
+        // 生成适用于 Google Authenticator 的 URI（otpauth://）
+        const uri = totp.keyuri('user@example.com', 'MyApp', document.getElementById('secret-key').innerText);
+        document.writeln(uri);
+
+        // 生成二维码
+        // new QRCode(document.getElementById("qrcode"), uri);
+        new QRCode(document.getElementById("qrcode"), {
+            text: uri,
+            width: 150,  // 设置二维码宽度
+            height: 150  // 设置二维码高度
+        });
+
+        //test - start
+        //const uri2 = totp.keyuri('uri2@uri2.com', 'uri2', secretKey);
+        //new QRCode(document.getElementById("qrcode"), {
+        //    text: uri2,
+        //    width: 150,  // 设置二维码宽度
+        //    height: 150  // 设置二维码高度
+        //});
+        //test - end
+
+        // 每秒更新 OTP
+        function updateOTP() {
+            document.getElementById('otp').innerText = "当前 OTP: " + totp.generate(document.getElementById('secret-key').innerText);
+        }
+        setInterval(updateOTP, 1000);  // 每秒刷新
+
+        // 验证用户输入的 OTP
+        function verifyOTP() {
+            const userInput = document.getElementById("user-otp").value;
+            if (totp.verify({ token: userInput, secret: document.getElementById('secret-key').innerText })) {
+                document.getElementById("result").innerText = "✅ 验证成功！";
+            } else {
+                document.getElementById("result").innerText = "❌ OTP 错误，请重试！";
+            }
+        }
+
+        // 初始化显示 OTP
+        updateOTP();
+    </script>
+</body>
+</html>
