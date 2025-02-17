@@ -3,138 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>二维码扫描器</title>
-    <!-- 引入 html5-qrcode 库 -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <title>ZXing-js 扫码示例</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            text-align: center;
-            background: #f4f4f4;
-            padding: 20px;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-        }
-
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        #reader {
-            width: 100%;
-            max-height: 300px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-top: 15px;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            resize: none;
-        }
-
-        .btn {
-            display: inline-block;
-            margin: 10px;
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        video { width: 100%; max-width: 400px; border: 1px solid #ccc; margin: 10px 0; }
+        textarea { width: 100%; height: 100px; }
+        button { padding: 10px 15px; margin: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2>二维码扫描器</h2>
+    <h2>扫码识别二维码</h2>
+    <video id="video" autoplay playsinline></video>
+    <button id="startScan">📷 开始扫描</button>
+    <button id="stopScan" disabled>🛑 停止扫描</button>
 
-    <div class="container">
-        <!-- ✅ 扫码区域 -->
-        <div id="reader"></div>
-        <!-- 控制按钮 -->
-        <button class="btn" id="start-btn">启动摄像头</button>
-        <button class="btn" id="stop-btn" style="display: none;">停止扫描</button>
-        <!-- 显示二维码结果 -->
-        <textarea id="result" placeholder="二维码内容会显示在这里...2" readonly></textarea>
-    </div>
+    <h3>二维码内容</h3>
+    <textarea id="qrResult" readonly></textarea>
+    <button id="copyText">📋 复制内容</button>
 
-    <script>
-        let scanner = null;
+    <script type="module">
+        import { BrowserQRCodeReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
 
-        function getQrBoxSize() {
-            const minSize = Math.min(window.innerWidth, window.innerHeight);
-            return Math.floor(minSize * 0.75); // 让 QR 扫描框占 75% 的最小边
-        }
+        const video = document.getElementById("video");
+        const qrResult = document.getElementById("qrResult");
+        const startScanBtn = document.getElementById("startScan");
+        const stopScanBtn = document.getElementById("stopScan");
+        const copyBtn = document.getElementById("copyText");
 
-        function getBestCameraConfig() {
-            return { facingMode: { exact: "environment" } };
-        }
+        let codeReader = new BrowserQRCodeReader();
+        let stream = null;
 
-        document.getElementById("start-btn").addEventListener("click", function () {
-            if (!scanner) {
-                scanner = new Html5Qrcode("reader");
-            }
-            document.getElementById("start-btn").style.display = "none";
-            document.getElementById("stop-btn").style.display = "inline-block";
+        // 启动摄像头并扫描
+        async function startScan() {
+            try {
+                startScanBtn.disabled = true;
+                stopScanBtn.disabled = false;
 
-            scanner.start(
-                getBestCameraConfig(), // ✅ 确保后置摄像头可用
-                {
-                    fps: 10,     
-                    qrbox: getQrBoxSize() // ✅ 动态调整 QR 识别区域
-                },
-                (decodedText) => {
-                    console.log("二维码内容:", decodedText);
-                    document.getElementById("result").value = decodedText;
-                    stopScan(); // 识别成功后自动停止
-                },
-                (errorMessage) => {
-                    console.warn("未检测到二维码", errorMessage);
-                }
-            ).catch(err => {
-                alert("无法访问摄像头: " + err);
-                document.getElementById("start-btn").style.display = "inline-block";
-                document.getElementById("stop-btn").style.display = "none";
-            });
-        });
+                // 启动摄像头
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                video.srcObject = stream;
 
-        document.getElementById("stop-btn").addEventListener("click", function () {
-            stopScan();
-        });
-
-        function stopScan() {
-            if (scanner) {
-                scanner.stop().then(() => {
-                    document.getElementById("start-btn").style.display = "inline-block";
-                    document.getElementById("stop-btn").style.display = "none";
-                    console.log("摄像头已关闭");
-                }).catch(err => {
-                    console.error("关闭摄像头失败:", err);
+                // 开始扫码
+                codeReader.decodeFromVideoElement(video, (result, err) => {
+                    if (result) {
+                        qrResult.value = result.text;  // 识别到二维码内容
+                        stopScan();  // 关闭摄像头
+                    }
                 });
+            } catch (err) {
+                alert("启动摄像头失败: " + err.message);
+                startScanBtn.disabled = false;
+                stopScanBtn.disabled = true;
             }
         }
+
+        // 停止扫描并关闭摄像头
+        function stopScan() {
+            if (stream) {
+                let tracks = stream.getTracks();
+                tracks.forEach(track => track.stop()); // 关闭摄像头
+            }
+            startScanBtn.disabled = false;
+            stopScanBtn.disabled = true;
+        }
+
+        // 复制文本框内容
+        copyBtn.addEventListener("click", () => {
+            qrResult.select();
+            document.execCommand("copy");
+            alert("已复制二维码内容");
+        });
+
+        // 绑定按钮事件
+        startScanBtn.addEventListener("click", startScan);
+        stopScanBtn.addEventListener("click", stopScan);
     </script>
 
 </body>
