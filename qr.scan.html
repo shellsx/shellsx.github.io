@@ -74,17 +74,26 @@
     <h2>二维码扫描器</h2>
 
     <div class="container">
-        <!-- 扫码区域 -->
+        <!-- ✅ 扫码区域 -->
         <div id="reader"></div>
         <!-- 控制按钮 -->
         <button class="btn" id="start-btn">启动摄像头</button>
         <button class="btn" id="stop-btn" style="display: none;">停止扫描</button>
         <!-- 显示二维码结果 -->
-        <textarea id="result" placeholder="二维码内容会显示在这里..." readonly></textarea>
+        <textarea id="result" placeholder="二维码内容会显示在这里...1" readonly></textarea>
     </div>
 
     <script>
         let scanner = null;
+
+        function getQrBoxSize() {
+            const minSize = Math.min(window.innerWidth, window.innerHeight);
+            return Math.floor(minSize * 0.75); // 让 QR 扫描框占 75% 的最小边
+        }
+
+        function getBestCameraConfig() {
+            return { facingMode: { exact: "environment" } };
+        }
 
         document.getElementById("start-btn").addEventListener("click", function () {
             if (!scanner) {
@@ -94,10 +103,10 @@
             document.getElementById("stop-btn").style.display = "inline-block";
 
             scanner.start(
-                { facingMode: "environment" }, // 使用后置摄像头
+                getBestCameraConfig(), // ✅ 确保后置摄像头可用
                 {
-                    fps: 10,     // 每秒扫描 10 帧
-                    qrbox: 250   // 扫描框大小
+                    fps: 10,     
+                    qrbox: getQrBoxSize() // ✅ 动态调整 QR 识别区域
                 },
                 (decodedText) => {
                     console.log("二维码内容:", decodedText);
