@@ -4,86 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二维码扫描器</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- 引入 html5-qrcode 库 -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { text-align: center; background: #f4f4f4; padding: 20px; }
-        h2 { margin-bottom: 10px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        video { width: 100%; border-radius: 5px; }
-        textarea { width: 100%; height: 100px; margin-top: 10px; padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
-        .btn { display: inline-block; margin-top: 10px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .btn:hover { background: #0056b3; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            text-align: center;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #reader {
+            width: 100% !important; /* 确保宽度占满父容器 */
+            max-width: 400px; /* 限制最大宽度，防止过宽 */
+            height: 300px !important; /* 设置固定高度，避免塌陷 */
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            margin: auto;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+
+        .btn {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
     </style>
 </head>
 <body>
 
     <h2>二维码扫描器</h2>
+
     <div class="container">
-        <video id="camera" autoplay playsinline></video>
+        <!-- 扫码区域 -->
+        <div id="reader"></div>
+        <!-- 控制按钮 -->
         <button class="btn" id="start-btn">启动摄像头</button>
-        <textarea id="result" placeholder="二维码内容会显示在这里...123" readonly></textarea>
+        <button class="btn" id="stop-btn" style="display: none;">停止扫描</button>
+        <!-- 显示二维码结果 -->
+        <textarea id="result" placeholder="二维码内容会显示在这里..." readonly></textarea>
     </div>
 
     <script>
-        let video = document.getElementById("camera");
-        let resultText = document.getElementById("result");
-        let startBtn = document.getElementById("start-btn");
-        let stream = null;
-        let scanning = false;
+        let scanner = null;
 
-        startBtn.addEventListener("click", startCamera);
-
-        function startCamera() {
-            scanning = true; // 标记正在扫描
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(function (mediaStream) {
-                    stream = mediaStream;
-                    video.srcObject = mediaStream;
-                    video.setAttribute("playsinline", true); // 兼容 iOS
-                    video.play();
-                    setTimeout(scanQRCode, 500); // 延迟执行，保证摄像头已准备好
-                })
-                .catch(function (err) {
-                    alert("无法访问摄像头: " + err);
-                });
-        }
-
-        function scanQRCode() {
-            if (!scanning) return; // 如果已停止，则不执行扫描
-
-            let canvas = document.createElement("canvas");
-            let ctx = canvas.getContext("2d");
-
-            function checkFrame() {
-                if (!video.videoWidth) {
-                    requestAnimationFrame(checkFrame);
-                    return;
-                }
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                let code = jsQR(imageData.data, imageData.width, imageData.height);
-
-                if (code) {
-                    resultText.value = code.data;
-                    stopCamera();
-                } else if (scanning) {
-                    setTimeout(checkFrame, 200); // 200ms 轮询，降低 CPU 占用
-                }
+        document.getElementById("start-btn").addEventListener("click", function () {
+            if (!scanner) {
+                scanner = new Html5Qrcode("reader");
             }
+            document.getElementById("start-btn").style.display = "none";
+            document.getElementById("stop-btn").style.display = "inline-block";
 
-            checkFrame();
-        }
+            scanner.start(
+                { facingMode: "environment" }, // 使用后置摄像头
+                {
+                    fps: 10,     // 每秒扫描 10 帧
+                    qrbox: 250   // 扫描框大小
+                },
+                (decodedText) => {
+                    console.log("二维码内容:", decodedText);
+                    document.getElementById("result").value = decodedText;
+                    stopScan(); // 识别成功后自动停止
+                },
+                (errorMessage) => {
+                    console.warn("未检测到二维码", errorMessage);
+                }
+            ).catch(err => {
+                alert("无法访问摄像头: " + err);
+                document.getElementById("start-btn").style.display = "inline-block";
+                document.getElementById("stop-btn").style.display = "none";
+            });
+        });
 
-        function stopCamera() {
-            scanning = false; // 停止扫描
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
+        document.getElementById("stop-btn").addEventListener("click", function () {
+            stopScan();
+        });
+
+        function stopScan() {
+            if (scanner) {
+                scanner.stop().then(() => {
+                    document.getElementById("start-btn").style.display = "inline-block";
+                    document.getElementById("stop-btn").style.display = "none";
+                    console.log("摄像头已关闭");
+                }).catch(err => {
+                    console.error("关闭摄像头失败:", err);
+                });
             }
         }
     </script>
