@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二维码扫描器</title>
-    <script src="js/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { text-align: center; background: #f4f4f4; padding: 20px; }
@@ -21,21 +21,28 @@
     <h2>二维码扫描器</h2>
     <div class="container">
         <video id="camera" autoplay playsinline></video>
-        <button class="btn" onclick="startCamera()">启动摄像头</button>
-        <textarea id="result" placeholder="二维码内容会显示在这里..." readonly></textarea>
+        <button class="btn" id="start-btn">启动摄像头</button>
+        <textarea id="result" placeholder="二维码内容会显示在这里...123" readonly></textarea>
     </div>
 
     <script>
         let video = document.getElementById("camera");
         let resultText = document.getElementById("result");
+        let startBtn = document.getElementById("start-btn");
         let stream = null;
+        let scanning = false;
+
+        startBtn.addEventListener("click", startCamera);
 
         function startCamera() {
+            scanning = true; // 标记正在扫描
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                 .then(function (mediaStream) {
                     stream = mediaStream;
                     video.srcObject = mediaStream;
-                    scanQRCode();
+                    video.setAttribute("playsinline", true); // 兼容 iOS
+                    video.play();
+                    setTimeout(scanQRCode, 500); // 延迟执行，保证摄像头已准备好
                 })
                 .catch(function (err) {
                     alert("无法访问摄像头: " + err);
@@ -43,6 +50,8 @@
         }
 
         function scanQRCode() {
+            if (!scanning) return; // 如果已停止，则不执行扫描
+
             let canvas = document.createElement("canvas");
             let ctx = canvas.getContext("2d");
 
@@ -54,22 +63,24 @@
 
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
                 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 let code = jsQR(imageData.data, imageData.width, imageData.height);
 
                 if (code) {
                     resultText.value = code.data;
                     stopCamera();
-                } else {
-                    requestAnimationFrame(checkFrame);
+                } else if (scanning) {
+                    setTimeout(checkFrame, 200); // 200ms 轮询，降低 CPU 占用
                 }
             }
-            requestAnimationFrame(checkFrame);
+
+            checkFrame();
         }
 
         function stopCamera() {
+            scanning = false; // 停止扫描
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
